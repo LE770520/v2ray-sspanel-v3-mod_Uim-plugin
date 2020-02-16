@@ -9,7 +9,7 @@ red='\033[0;31m'
 green='\033[0;32m'
 yellow='\033[0;33m'
 plain='\033[0m'
-software=(Docker_Caddy Docker_Caddy_cloudflare Docker)
+software=(Docker Docker_Caddy Docker_Caddy_cloudflare)
 operation=(install update_config update_image logs)
 # Make sure only root can run our script
 [[ $EUID -ne 0 ]] && echo -e "[${red}Error${plain}] This script must be run as root!" && exit 1
@@ -117,17 +117,46 @@ pre_install_docker_compose(){
     echo "---------------------------"
     echo
     # Set ssrpanel node_id
-    echo "node_id"
+    echo "sspanel node_id"
     read -p "(Default value: 0 ):" ssrpanel_node_id
     [ -z "${ssrpanel_node_id}" ] && ssrpanel_node_id=0
     echo
     echo "---------------------------"
-    echo "node_id = ${ssrpanel_node_id}"
+    echo "ssrpanel_node_id = ${ssrpanel_node_id}"
+    echo "---------------------------"
+    echo
+     # Set ssrpanel node_id
+    echo "DNS "
+    read -p "(Default value: localhost ):" LDNS
+    [ -z "${LDNS}" ] && LDNS="localhost"
+    echo
+    echo "---------------------------"
+    echo "DNS = ${LDNS}"
     echo "---------------------------"
     echo
 
+    # Set caddy cloudflare ddns email
+    echo "cloudflare email for tls (optional)"
+    read -p "(Default v2rayV3@test.com):" cloudflare_email
+    [ -z "${cloudflare_email}" ]  && cloudflare_email="v2rayV3@test.com"
+    echo
+    echo "---------------------------"
+    echo "cloudflare_email = ${cloudflare_email}"
+    echo "---------------------------"
+    echo
 
-    echo "Which connection do you prefer 0 for webapi and 1 for mysql"
+    # Set caddy cloudflare ddns key
+    echo "cloudflare key for tls (optional)"
+    read -p "(Default bbbbbbbbbbbbbbbbbb ):" cloudflare_key
+    [ -z "${cloudflare_key}" ] && cloudflare_key="bbbbbbbbbbbbbbbbbb"
+    echo
+    echo "---------------------------"
+    echo "cloudflare_key = ${cloudflare_key}"
+    echo "---------------------------"
+    echo
+    echo
+
+    echo "Which connection do you prefer 0 for webapi 1 for mysql"
     read -p "(v2ray_usemysql (Default 0):" v2ray_usemysql
     [ -z "${v2ray_usemysql}" ] && v2ray_usemysql=0
     echo
@@ -136,8 +165,10 @@ pre_install_docker_compose(){
     echo "---------------------------"
     echo
 
+    if [ "${v2ray_usemysql}" -eq 0 ];
+        then
       # Set ssrpanel_url
-    echo "Please sspanel_url, u can pass this setting if u use mysql"
+    echo "Please sspanel_url"
     read -p "(There is no default value please make sure you input the right thing):" ssrpanel_url
     [ -z "${ssrpanel_url}" ]
     echo
@@ -146,7 +177,7 @@ pre_install_docker_compose(){
     echo "---------------------------"
     echo
     # Set ssrpanel key
-    echo "sspanel key  u can pass this setting if u use mysql"
+    echo "sspanel key"
     read -p "(There is no default value please make sure you input the right thing):" ssrpanel_key
     [ -z "${ssrpanel_key}" ]
     echo
@@ -154,9 +185,11 @@ pre_install_docker_compose(){
     echo "ssrpanel_key = ${ssrpanel_key}"
     echo "---------------------------"
     echo
+    else
+
    # Set Setting if the node go downwith panel
-    echo "Setting Myqlhost,  u can pass this setting u chosen use webapi"
-    read -p "(v2ray_downWithPanel :" v2ray_mysqlhost
+    echo "Setting Myqlhost"
+    read -p "(v2ray_mysqlhost :" v2ray_mysqlhost
     [ -z "${v2ray_mysqlhost}" ] && v2ray_mysqlhost=""
     echo
     echo "---------------------------"
@@ -164,7 +197,7 @@ pre_install_docker_compose(){
     echo "---------------------------"
     echo
     # Set Setting if the node go downwith panel
-    echo "Setting MysqlPort u can pass this setting u chosen use webapi"
+    echo "Setting MysqlPort"
     read -p "(v2ray_mysqlport (Default 3306):" v2ray_mysqlport
     [ -z "${v2ray_mysqlport}" ] && v2ray_mysqlport=3306
     echo
@@ -173,34 +206,33 @@ pre_install_docker_compose(){
     echo "---------------------------"
     echo
     # Set Setting if the node go downwith panel
-    echo "Setting MysqlUser u can pass this setting if u use webapi"
-    read -p "(v2ray_myqluser (Default root):" v2ray_myqluser
-    [ -z "${v2ray_myqluser}" ] && v2ray_myqluser="root"
+    echo "Setting MysqlUser"
+    read -p "(v2ray_myqluser (Default sspanel):" v2ray_myqluser
+    [ -z "${v2ray_myqluser}" ] && v2ray_myqluser="sspanel"
     echo
     echo "---------------------------"
     echo "v2ray_myqluser = ${v2ray_myqluser}"
     echo "---------------------------"
     echo
     # Set Setting if the node go downwith panel
-    echo "Setting MysqlPassword u can pass this setting if u use webapi"
-    read -p "(v2ray_mysqlpassword (Default 1):" v2ray_mysqlpassword
-    [ -z "${v2ray_mysqlpassword}" ] && v2ray_mysqlpassword=1
+    echo "Setting MysqlPassword"
+    read -p "(v2ray_mysqlpassword (Default password):" v2ray_mysqlpassword
+    [ -z "${v2ray_mysqlpassword}" ] && v2ray_mysqlpassword=password
     echo
     echo "---------------------------"
     echo "v2ray_mysqlpassword = ${v2ray_mysqlpassword}"
     echo "---------------------------"
     echo
     # Set Setting if the node go downwith panel
-    echo "Setting MysqlDbname u can pass this setting u chosen use webapi"
+    echo "Setting MysqlDbname"
     read -p "(v2ray_mysqldbname (Default sspanel):" v2ray_mysqldbname
-    [ -z "${v2ray_mysqldbname}" ] && v2ray_mysqldbname="sspanel"
+    [ -z "${v2ray_mysqldbname}" ] && v2ray_mysqldbname=sspanel
     echo
     echo "---------------------------"
     echo "v2ray_mysqldbname = ${v2ray_mysqldbname}"
     echo "---------------------------"
     echo
-
-
+    fi
     # Set ssrpanel speedtest function
     echo "use sspanel speedtest"
     read -p "(sspanel speedtest: Default (6) hours every time):" ssrpanel_speedtest
@@ -223,8 +255,8 @@ pre_install_docker_compose(){
 
     # Set Setting if the node go downwith panel
     echo "Setting if the node go downwith panel"
-    read -p "(v2ray_downWithPanel (Default 1):" v2ray_downWithPanel
-    [ -z "${v2ray_downWithPanel}" ] && v2ray_downWithPanel=1
+    read -p "(v2ray_downWithPanel (Default 0):" v2ray_downWithPanel
+    [ -z "${v2ray_downWithPanel}" ] && v2ray_downWithPanel=0
     echo
     echo "---------------------------"
     echo "v2ray_downWithPanel = ${v2ray_downWithPanel}"
@@ -299,9 +331,10 @@ config_docker(){
     echo "install curl"
     install_dependencies
     echo "Writing docker-compose.yml"
-    curl -L https://raw.githubusercontent.com/githubphone/pay-v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/V2ray/docker-compose.yml > docker-compose.yml
+    curl -L https://raw.githubusercontent.com/LE770520/pay-v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/V2ray/docker-compose.yml > docker-compose.yml
     sed -i "s|node_id:.*|node_id: ${ssrpanel_node_id}|"  ./docker-compose.yml
     sed -i "s|sspanel_url:.*|sspanel_url: '${ssrpanel_url}'|"  ./docker-compose.yml
+    sed -i "s|LDNS:.*|LDNS: '${LDNS}'|"  ./docker-compose.yml
     sed -i "s|key:.*|key: '${ssrpanel_key}'|"  ./docker-compose.yml
     sed -i "s|speedtest:.*|speedtest: ${ssrpanel_speedtest}|"  ./docker-compose.yml
     sed -i "s|api_port:.*|api_port: ${v2ray_api_port}|" ./docker-compose.yml
@@ -313,6 +346,8 @@ config_docker(){
     sed -i "s|MYSQLUSR:.*|MYSQLUSR: ${v2ray_myqluser}|" ./docker-compose.yml
     sed -i "s|MYSQLPASSWD:.*|MYSQLPASSWD: ${v2ray_mysqlpassword}|" ./docker-compose.yml
     sed -i "s|MYSQLDBNAME:.*|MYSQLDBNAME: ${v2ray_mysqldbname}|" ./docker-compose.yml
+    sed -i "s|CF_Key:.*|CF_Key: ${cloudflare_key}|" ./docker-compose.yml
+    sed -i "s|CF_Email:.*|CF_Email: ${cloudflare_email}|" ./docker-compose.yml
 }
 
 
@@ -323,10 +358,11 @@ config_caddy_docker(){
     cd ${cur_dir}
     echo "install curl"
     install_dependencies
-    curl -L https://raw.githubusercontent.com/githubphone/pay-v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/Caddy_V2ray/Caddyfile >  Caddyfile
+    curl -L https://raw.githubusercontent.com/v2rayv3/pay-v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/Caddy_V2ray/Caddyfile >  Caddyfile
     echo "Writing docker-compose.yml"
-    curl -L https://raw.githubusercontent.com/githubphone/pay-v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/Caddy_V2ray/docker-compose.yml > docker-compose.yml
+    curl -L https://raw.githubusercontent.com/v2rayv3/pay-v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/Caddy_V2ray/docker-compose.yml > docker-compose.yml
     sed -i "s|node_id:.*|node_id: ${ssrpanel_node_id}|"  ./docker-compose.yml
+    sed -i "s|LDNS:.*|LDNS: '${LDNS}'|"  ./docker-compose.yml
     sed -i "s|sspanel_url:.*|sspanel_url: '${ssrpanel_url}'|"  ./docker-compose.yml
     sed -i "s|key:.*|key: '${ssrpanel_key}'|"  ./docker-compose.yml
     sed -i "s|speedtest:.*|speedtest: ${ssrpanel_speedtest}|"  ./docker-compose.yml
@@ -339,6 +375,8 @@ config_caddy_docker(){
     sed -i "s|MYSQLUSR:.*|MYSQLUSR: ${v2ray_myqluser}|" ./docker-compose.yml
     sed -i "s|MYSQLPASSWD:.*|MYSQLPASSWD: ${v2ray_mysqlpassword}|" ./docker-compose.yml
     sed -i "s|MYSQLDBNAME:.*|MYSQLDBNAME: ${v2ray_mysqldbname}|" ./docker-compose.yml
+    sed -i "s|CF_Key:.*|CF_Key: ${cloudflare_key}|" ./docker-compose.yml
+    sed -i "s|CF_Email:.*|CF_Email: ${cloudflare_email}|" ./docker-compose.yml
     sed -i "s|V2RAY_DOMAIN=xxxx.com|V2RAY_DOMAIN=${v2ray_domain}|"  ./docker-compose.yml
     sed -i "s|V2RAY_PATH=/v2ray|V2RAY_PATH=${v2ray_path}|"  ./docker-compose.yml
     sed -i "s|V2RAY_EMAIL=xxxx@outlook.com|V2RAY_EMAIL=${v2ray_email}|"  ./docker-compose.yml
@@ -349,37 +387,17 @@ config_caddy_docker(){
 # Config caddy_docker
 config_caddy_docker_cloudflare(){
 
-    # Set caddy cloudflare ddns email
-    echo "caddy cloudflare ddns email"
-    read -p "(No default ):" cloudflare_email
-    [ -z "${cloudflare_email}" ]
-    echo
-    echo "---------------------------"
-    echo "cloudflare_email = ${cloudflare_email}"
-    echo "---------------------------"
-    echo
-
-    # Set caddy cloudflare ddns key
-    echo "caddy cloudflare ddns key"
-    read -p "(No default ):" cloudflare_key
-    [ -z "${cloudflare_email}" ]
-    echo
-    echo "---------------------------"
-    echo "cloudflare_email = ${cloudflare_key}"
-    echo "---------------------------"
-    echo
-    echo
-
     echo "Press any key to start...or Press Ctrl+C to cancel"
     char=`get_char`
     cd ${cur_dir}
     echo "install curl first "
     install_dependencies
     echo "Starting Writing Caddy file and docker-compose.yml"
-    curl -L https://raw.githubusercontent.com/githubphone/v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/Caddy_V2ray/Caddyfile >Caddyfile
+    curl -L https://raw.githubusercontent.com/v2rayv3/pay-v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/Caddy_V2ray/Caddyfile >Caddyfile
     epcho "Writing docker-compose.yml"
-    curl -L https://raw.githubusercontent.com/githubphone/v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/Caddy_V2ray/docker-compose.yml >docker-compose.yml
+    curl -L https://raw.githubusercontent.com/v2rayv3/pay-v2ray-sspanel-v3-mod_Uim-plugin/master/Docker/Caddy_V2ray/docker-compose.yml >docker-compose.yml
     sed -i "s|node_id:.*|node_id: ${ssrpanel_node_id}|"  ./docker-compose.yml
+    sed -i "s|LDNS:.*|LDNS: '${LDNS}'|"  ./docker-compose.yml
     sed -i "s|sspanel_url:.*|sspanel_url: '${ssrpanel_url}'|"  ./docker-compose.yml
     sed -i "s|key:.*|key: '${ssrpanel_key}'|"  ./docker-compose.yml
     sed -i "s|speedtest:.*|speedtest: ${ssrpanel_speedtest}|"  ./docker-compose.yml
@@ -392,6 +410,8 @@ config_caddy_docker_cloudflare(){
     sed -i "s|MYSQLUSR:.*|MYSQLUSR: ${v2ray_myqluser}|" ./docker-compose.yml
     sed -i "s|MYSQLPASSWD:.*|MYSQLPASSWD: ${v2ray_mysqlpassword}|" ./docker-compose.yml
     sed -i "s|MYSQLDBNAME:.*|MYSQLDBNAME: ${v2ray_mysqldbname}|" ./docker-compose.yml
+    sed -i "s|CF_Key:.*|CF_Key: ${cloudflare_key}|" ./docker-compose.yml
+    sed -i "s|CF_Email:.*|CF_Email: ${cloudflare_email}|" ./docker-compose.yml
     sed -i "s|V2RAY_DOMAIN=xxxx.com|V2RAY_DOMAIN=${v2ray_domain}|"  ./docker-compose.yml
     sed -i "s|V2RAY_PATH=/v2ray|V2RAY_PATH=${v2ray_path}|"  ./docker-compose.yml
     sed -i "s|V2RAY_EMAIL=xxxx@outlook.com|V2RAY_EMAIL=${v2ray_email}|"  ./docker-compose.yml
@@ -489,7 +509,6 @@ install_dependencies(){
     echo -e "[${green}Info${plain}] Setting TimeZone to Shanghai"
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     date -s "$(curl -sI g.cn | grep Date | cut -d' ' -f3-6)Z"
-
 }
 #update_image
 update_image_v2ray(){
@@ -517,17 +536,17 @@ update_config_v2ray(){
     case "${selected}" in
         1)
         pre_install_docker_compose
-        pre_install_caddy
-        config_caddy_docker
+        config_docker
         ;;
         2)
         pre_install_docker_compose
         pre_install_caddy
-        config_caddy_docker_cloudflare
+        config_caddy_docker
         ;;
         3)
         pre_install_docker_compose
-        config_docker
+        pre_install_caddy
+        config_caddy_docker_cloudflare
         ;;
         *)
         echo "Wrong number"
@@ -546,17 +565,17 @@ install_v2ray(){
     case "${selected}" in
         1)
         pre_install_docker_compose
-        pre_install_caddy
-        config_caddy_docker
+        config_docker
         ;;
         2)
         pre_install_docker_compose
         pre_install_caddy
-        config_caddy_docker_cloudflare
+        config_caddy_docker
         ;;
         3)
         pre_install_docker_compose
-        config_docker
+        pre_install_caddy
+        config_caddy_docker_cloudflare
         ;;
         *)
         echo "Wrong number"
